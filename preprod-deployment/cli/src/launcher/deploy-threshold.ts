@@ -10,7 +10,7 @@ import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-p
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
 import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
-import { Contract as CompiledThresholdContract } from '@midnight-ntwrk/threshold-contract';
+import { CompiledThresholdContractContract, createThresholdPrivateState } from '@midnight-ntwrk/threshold-contract';
 import { createLogger } from '../logger-utils.js';
 import { getUnshieldedAddress } from '../wallet-utils.js';
 import { generateDust } from '../generate-dust.js';
@@ -143,9 +143,9 @@ async function main() {
   let success = false;
   try {
     
-    
     const deployed = await deployContract(providers, {
-        compiledContract: CompiledThresholdContract,
+        initialPrivateState: createThresholdPrivateState(new Uint8Array(32), 0n, new Uint8Array(32)),
+        compiledContract: CompiledThresholdContractContract,
         args: []
     });
     
