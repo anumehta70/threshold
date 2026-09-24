@@ -61,7 +61,7 @@ jobs:
           npx tsx src/launcher/deploy-threshold.ts
         env:
           NODE_OPTIONS: "--max-old-space-size=8192 --expose-gc"
-          WALLET_SEED: myth useful toy raven march sunset glare jealous feed human glide right exist ghost thunder master peasant check smoke garlic boost candy flame arch
+          WALLET_SEED: b13ef2c445dd8c7c5f5586a2b1f18b6135d7acc340a749e69d5b456ff9356144
 
       - name: Upload Deployment Info
         if: always()
