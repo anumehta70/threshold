@@ -61,7 +61,7 @@ jobs:
           npx tsx src/launcher/deploy-threshold.ts
         env:
           NODE_OPTIONS: "--max-old-space-size=8192 --expose-gc"
-          WALLET_SEED: b13ef2c445dd8c7c5f5586a2b1f18b6135d7acc340a749e69d5b456ff9356144
+          WALLET_SEED: 929dff99d9387db318b3bc54add98c5ce4fcc3386445a224e3332fe19a429610
 
       - name: Upload Deployment Info
         if: always()
