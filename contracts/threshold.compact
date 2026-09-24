@@ -1,0 +1,145 @@
+// ============================================================================
+// Threshold — Proof of Income Without the Paper Trail
+// ============================================================================
+// PRIVACY MODEL
+// --------------------------------------------------------------------------
+// PUBLIC (on the ledger, anyone can read):
+//   - The set of trusted issuer IDs (payroll/employer identities allowed to
+//     issue attestations) — this is a public registry, like a list of
+//     accredited payroll providers, not private data.
+//   - Each listing's rent amount and landlord ID (already advertised on any
+//     listing site — not sensitive).
+//   - A commitment hash per attestation (hides the real income figure).
+//   - A nullifier per submitted proof (proves "this applicant already
+//     proved eligibility for this listing" without revealing who, or what
+//     they earn, to anyone browsing the ledger).
+//   - How many applicants have verified against a given listing.
+//
+// PRIVATE (witnesses — never written to the ledger, never leave the caller):
+//   - The applicant's real income.
+//   - The salt binding an attestation to one applicant.
+//   - The applicant's secret key (their income is never linked to a public
+//     identity beyond the one-time nullifier for one specific listing).
+//
+// WHAT GETS PROVED WITHOUT BEING REVEALED:
+//   - "This attestation genuinely came from a trusted issuer, for this
+//     applicant, for this income" (submitProof recomputes the issuer's
+//     commitment and checks it matches) — without revealing the income.
+//   - "This applicant's attested income meets this listing's affordability
+//     threshold" (income >= rent * multiplier) — without revealing the
+//     exact income, only a pass.
+//   - "This applicant has not already claimed eligibility for this
+//     listing" — enforced by a listing-scoped nullifier, so the same
+//     attestation can't be replayed to inflate a listing's applicant pool.
+// ============================================================================
+
+pragma language_version >= 0.14.0;
+
+import CompactStandardLibrary;
+
+// ---- Public ledger state ---------------------------------------------------
+
+export ledger issuerCount: Counter;
+export ledger trustedIssuers: Map<Bytes<32>, Boolean>;
+
+export ledger listingCount: Counter;
+export ledger listingRentAmount: Map<Uint<64>, Uint<64>>;
+export ledger listingLandlord: Map<Uint<64>, Bytes<32>>;
+export ledger listingVerifiedCount: Map<Uint<64>, Uint<32>>;
+
+// attestationId -> commitment hash of (income, applicantAddress, salt)
+export ledger attestationCommitment: Map<Bytes<32>, Bytes<32>>;
+// attestationId -> which trusted issuer created it (for audit trails only)
+export ledger attestationIssuer: Map<Bytes<32>, Bytes<32>>;
+
+// nullifier -> used (prevents the same attestation being replayed against
+// the same listing more than once)
+export ledger proofNullifiers: Map<Bytes<32>, Boolean>;
+
+// ---- Witnesses (private inputs, supplied off-chain by the caller) ---------
+
+witness callerSecretKey(): Bytes<32>;
+witness attestationIncome(): Uint<64>;
+witness attestationSalt(): Bytes<32>;
+
+// ---- Circuits ---------------------------------------------------------------
+
+// Adds a payroll/employer identity to the trusted-issuer registry. In this
+// MVP any caller may register an issuer (kept simple for the hackathon
+// scope); a production deployment would gate this behind a DAO- or
+// platform-owner-controlled admin circuit.
+export circuit registerIssuer(issuerId: Bytes<32>): [] {
+  trustedIssuers.insert(disclose(issuerId), true);
+  issuerCount.increment(1);
+}
+
+// A landlord/agent publishes a listing's rent — rent is already public
+// information on any listing site, so it is not a witness.
+export circuit createListing(rentAmount: Uint<64>): Uint<64> {
+  const landlordId = publicKey(callerSecretKey());
+  const listingId = listingCount.read();
+
+  listingRentAmount.insert(disclose(listingId), disclose(rentAmount));
+  listingLandlord.insert(disclose(listingId), disclose(landlordId));
+  listingVerifiedCount.insert(disclose(listingId), 0);
+  listingCount.increment(1);
+
+  return disclose(listingId);
+}
+
+// Called by a trusted issuer (payroll provider / employer) to attest to one
+// applicant's income. Only a commitment is published — the income itself
+// never touches the ledger. The applicant learns the real income + salt
+// off-chain (they already know their own income) and uses them later to
+// prove eligibility without re-disclosing the figure.
+export circuit issueAttestation(
+  attestationId: Bytes<32>,
+  issuerId: Bytes<32>,
+  applicantAddress: Bytes<32>
+): [] {
+  assert(trustedIssuers.member(issuerId), "issuer is not registered");
+  assert(trustedIssuers.lookup(issuerId), "issuer is not trusted");
+
+  const income = attestationIncome();
+  const salt = attestationSalt();
+
+  const commitment = persistentHash<Bytes<32>>(
+    pad(32, income) ++ applicantAddress ++ salt
+  );
+
+  attestationCommitment.insert(disclose(attestationId), disclose(commitment));
+  attestationIssuer.insert(disclose(attestationId), disclose(issuerId));
+}
+
+// Called by the applicant. Proves their attested income clears a listing's
+// affordability bar (rent * multiplier, e.g. 3x rent) without revealing the
+// income itself, and that this is the first time they've claimed
+// eligibility for this specific listing.
+export circuit submitProof(
+  listingId: Uint<64>,
+  attestationId: Bytes<32>,
+  multiplier: Uint<64>
+): [] {
+  const income = attestationIncome();
+  const salt = attestationSalt();
+  const applicantAddress = publicKey(callerSecretKey());
+
+  const storedCommitment = attestationCommitment.lookup(attestationId);
+  const recomputed = persistentHash<Bytes<32>>(
+    pad(32, income) ++ applicantAddress ++ salt
+  );
+  assert(recomputed == storedCommitment, "attestation does not match this caller");
+
+  const rent = listingRentAmount.lookup(listingId);
+  const required = rent * multiplier;
+  assert(income >= required, "attested income does not meet this listing's threshold");
+
+  const nullifier = persistentHash<Bytes<32>>(
+    pad(32, listingId) ++ applicantAddress
+  );
+  assert(!proofNullifiers.member(disclose(nullifier)), "already submitted a proof for this listing");
+  proofNullifiers.insert(disclose(nullifier), true);
+
+  const verifiedSoFar = listingVerifiedCount.lookup(listingId);
+  listingVerifiedCount.insert(disclose(listingId), disclose(verifiedSoFar + 1));
+}

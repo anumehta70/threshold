@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # Compiles the Compact contract when the Compact toolchain is present
+      # on the runner. Non-fatal in CI until compactc is added to the
+      # workflow image — the contract's syntax is still verified by hand on
+      # every deploy. See docs/USAGE.md.
+      - name: Compile Compact contract (best-effort)
+        run: |
+          if command -v compact >/dev/null 2>&1; then
+            compact compile contracts/threshold.compact managed/
+          else
+            echo "compactc not installed on this runner — skipping on-chain compile step."
+          fi
+        continue-on-error: true

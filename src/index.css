@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-pine-900 text-limewash font-body antialiased;
+    background-image: radial-gradient(
+      circle at 85% -10%,
+      rgba(139, 46, 46, 0.10),
+      transparent 45%
+    );
+  }
+  ::selection {
+    @apply bg-oxblood-500/30 text-limewash;
+  }
+  :focus-visible {
+    outline: 2px solid #b4534a;
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  /* A "blocked-out measurement": the one recurring motif for a hidden
+     income figure — a solid bar flanked by small dimension ticks, like a
+     redacted line on an architectural drawing. Everything else on the page
+     stays quiet around this one device. */
+  .sealed-figure {
+    @apply relative inline-flex h-[1.2em] min-w-[4.5ch] items-center justify-center
+      rounded-[1px] bg-pine-600 font-mono text-transparent select-none;
+  }
+  .sealed-figure::before,
+  .sealed-figure::after {
+    content: "";
+    @apply absolute top-1/2 h-2 w-px -translate-y-1/2 bg-oak-500/70;
+  }
+  .sealed-figure::before {
+    left: -6px;
+  }
+  .sealed-figure::after {
+    right: -6px;
+  }
+
+  /* The threshold line — a doorway sill used as a structural divider
+     between "what's public" and "what's proven, not shown". */
+  .threshold-line {
+    @apply relative h-[3px] w-full bg-oak-500/40;
+  }
+  .threshold-line::before {
+    content: "";
+    @apply absolute inset-x-0 -top-1 h-px bg-oak-500/20;
+  }
+
+  .card {
+    @apply rounded-lg border border-white/10 bg-pine-800/60;
+  }
+}
