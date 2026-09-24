@@ -103,8 +103,8 @@ export circuit issueAttestation(
   const income = attestationIncome();
   const salt = attestationSalt();
 
-  const commitment = persistentHash<Bytes<32>>(
-    (income as Bytes<32>) ++ applicantAddress ++ salt
+  const commitment = persistentHash<Vector<3, Bytes<32>>>(
+    [(income as Bytes<32>), applicantAddress, salt]
   );
 
   attestationCommitment.insert(disclose(attestationId), disclose(commitment));
@@ -125,8 +125,8 @@ export circuit submitProof(
   const applicantAddress = publicKey(callerSecretKey());
 
   const storedCommitment = attestationCommitment.lookup(attestationId);
-  const recomputed = persistentHash<Bytes<32>>(
-    (income as Bytes<32>) ++ applicantAddress ++ salt
+  const recomputed = persistentHash<Vector<3, Bytes<32>>>(
+    [(income as Bytes<32>), applicantAddress, salt]
   );
   assert(recomputed == storedCommitment, "attestation does not match this caller");
 
@@ -134,8 +134,8 @@ export circuit submitProof(
   const required = rent * multiplier;
   assert(income >= required, "attested income does not meet this listing's threshold");
 
-  const nullifier = persistentHash<Bytes<32>>(
-    (listingId as Bytes<32>) ++ applicantAddress
+  const nullifier = persistentHash<Vector<2, Bytes<32>>>(
+    [(listingId as Bytes<32>), applicantAddress]
   );
   assert(!proofNullifiers.member(disclose(nullifier)), "already submitted a proof for this listing");
   proofNullifiers.insert(disclose(nullifier), true);
