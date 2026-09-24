@@ -27,7 +27,7 @@ jobs:
 
       - name: Copy Contract
         run: |
-          cp contracts/gatecheck.compact preprod-deployment/contracts/src/threshold.compact
+          cp contracts/threshold.compact preprod-deployment/contracts/src/threshold.compact
 
       - name: Compile Contract
         run: |
