@@ -145,5 +145,5 @@ export circuit submitProof(
   proofNullifiers.insert(disclose(nullifier), true);
 
   const verifiedSoFar = listingVerifiedCount.lookup(listingId);
-  listingVerifiedCount.insert(disclose(listingId), disclose(verifiedSoFar + 1));
+  listingVerifiedCount.insert(disclose(listingId), disclose((verifiedSoFar + 1) as Uint<32>));
 }
