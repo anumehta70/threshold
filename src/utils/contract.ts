@@ -38,8 +38,8 @@ const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS ?? "";
 export const RUNTIME_MODE: "local" | "network" = CONTRACT_ADDRESS ? "network" : "local";
 
 // Network state globals
-let networkContract: any = null;
-let networkWallet: any = null;
+let networkContract: Contract<any, any> | null = null;
+let networkWallet: DAppConnectorWalletProvider | null = null;
 
 async function getContract() {
   if (networkContract) return networkContract;
@@ -89,7 +89,7 @@ export async function createListing(
   landlordTag: string
 ): Promise<ListingSummary> {
   const contract = await getContract();
-  const tx = await contract.callTx.createListing(BigInt(rentAmount), new Uint8Array(32) /* landlord mock */);
+  await contract.callTx.createListing(BigInt(rentAmount), new Uint8Array(32) /* landlord mock */);
   return {
     listingId: 1, // mock returned from tx
     rentAmount,
@@ -108,7 +108,7 @@ export async function issueAttestation(
   income: number
 ): Promise<AttestationHandle> {
   const contract = await getContract();
-  const tx = await contract.callTx.issueAttestation(new Uint8Array(32) /* mock pubkey */);
+  await contract.callTx.issueAttestation(new Uint8Array(32) /* mock pubkey */);
   return { attestationId: "attest-" + Date.now(), income, salt: "salt123" };
 }
 
@@ -121,6 +121,6 @@ export async function submitProof(input: {
   multiplier: number;
 }): Promise<ProofResult> {
   const contract = await getContract();
-  const tx = await contract.callTx.submitProof(BigInt(input.listingId));
+  await contract.callTx.submitProof(BigInt(input.listingId));
   return { listingId: input.listingId, verified: true };
 }
