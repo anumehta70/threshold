@@ -86,7 +86,9 @@ async function getProviders(): Promise<any> {
       'wss://indexer.preprod.midnight.network/api/v4/graphql/ws'
     ),
     proofProvider: httpClientProofProvider(
-      'https://midnight-proof-server.onrender.com'
+      'https://midnight-proof-server.onrender.com',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      {} as any
     ),
   };
 
