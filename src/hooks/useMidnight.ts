@@ -13,18 +13,8 @@ import {
   submitProof as submitProofCall,
 } from "../utils/contract";
 
-// Minimal shape of the Lace wallet's injected Midnight API. See:
-// https://docs.midnight.network — "Connect a DApp to Lace"
-type MidnightWalletApi = {
-  enable: () => Promise<{ address: string }>;
-  state: () => Promise<{ address: string }>;
-};
-
-declare global {
-  interface Window {
-    midnight?: { mnLace?: MidnightWalletApi };
-  }
-}
+// Window.midnight is declared in src/utils/contract.ts via InitialAPI.
+// No need to redeclare it here — just read from contract.ts's global.
 
 export type WalletStatus = "disconnected" | "connecting" | "connected" | "error";
 
@@ -47,7 +37,7 @@ export function useMidnight() {
     setStatus("connecting");
     setError(null);
     try {
-      const lace = window.midnight?.mnLace;
+      const lace = window.midnight?.['mnLace'] ?? window.midnight?.['nightscape'];
       if (!lace) {
         // No Lace extension found — fall back to a stable demo identity so
         // the flow stays fully clickable during review. Real funds/proofs
@@ -56,7 +46,8 @@ export function useMidnight() {
         setStatus("connected");
         return;
       }
-      const { address: addr } = await lace.enable();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { address: addr } = await (lace as any).enable() as { address: string };
       setAddress(addr);
       setStatus("connected");
     } catch (err) {
