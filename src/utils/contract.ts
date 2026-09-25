@@ -59,7 +59,7 @@ async function getContract() {
       'wss://indexer.preprod.midnight.network/api/v4/graphql/ws'
     ),
     zkConfigProvider: fetchZkConfigProvider(window.location.origin + '/managed/threshold'),
-    proofProvider: httpClientProofProvider('http://localhost:6300'),
+    proofProvider: httpClientProofProvider('https://midnight-proof-server.onrender.com'),
     walletProvider: wallet,
     midnightProvider: await getMidnightProvider(wallet),
   };
