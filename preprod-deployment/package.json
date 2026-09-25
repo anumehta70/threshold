@@ -9,7 +9,7 @@
     "node": ">=24.11.1"
   },
   "scripts": {
-    "postinstall": "patch-package --patch-dir infra/patches",
+    "postinstall": "npx --yes patch-package --patch-dir infra/patches",
     "setup": "./setup.sh",
     "doctor": "node infra/scripts/doctor.mjs",
     "verify": "npm run doctor",
