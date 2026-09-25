@@ -38,8 +38,8 @@ const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS ?? "";
 export const RUNTIME_MODE: "local" | "network" = CONTRACT_ADDRESS ? "network" : "local";
 
 // Network state globals
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let networkContract: Contract<any, any> | null = null;
-let networkWallet: DAppConnectorWalletProvider | null = null;
 
 async function getContract() {
   if (networkContract) return networkContract;
@@ -48,7 +48,6 @@ async function getContract() {
   if (!connector) throw new Error("No Midnight wallet found! Please install the 1am/Nightscape extension.");
 
   const wallet = await DAppConnectorWalletProvider.build(connector);
-  networkWallet = wallet;
   
   const providers = {
     privateStateProvider: browserLevelPrivateStateProvider({
