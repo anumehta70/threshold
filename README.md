@@ -12,7 +12,7 @@
 
 | Network | Address |
 |---------|---------|
-| Preprod | `0200c6b3da083a22731a1053fcded5cc81227e283758b95b955c57bcd89804625496` |
+| Preprod | `c6b3da083a22731a1053fcded5cc81227e283758b95b955c57bcd89804625496` |
 
 ## What This Product Does
 
