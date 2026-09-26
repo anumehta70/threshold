@@ -10,6 +10,8 @@ import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-conf
 import { CompiledThresholdContractContract } from '../../preprod-deployment/contracts/src/index';
 import type { InitialAPI, ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import { toHex, fromHex } from '@midnight-ntwrk/midnight-js-utils';
+import { Transaction } from '@midnight-ntwrk/midnight-js-protocol/ledger';
 
 // Initialize network ID globally
 setNetworkId('preprod');
@@ -138,24 +140,34 @@ async function getContract() {
     zkConfigProvider,
     proofProvider: httpClientProofProvider('https://midnight-proof-server.onrender.com', zkConfigProvider),
     
-    // Create an adapter to bridge the WalletConnectedAPI to the expected WalletProvider interface
-    // forwarding all other wallet methods to the injected real wallet API
-    walletProvider: new Proxy(wallet, {
-      get(target, prop) {
-        if (prop === 'getCoinPublicKey') {
-          return () => coinPublicKey;
-        }
-        if (prop === 'getEncryptionPublicKey') {
-          return () => encPublicKey;
-        }
+    // WalletProvider adapter: bridges the DApp connector API to the WalletProvider interface
+    // required by midnight-js-contracts. Uses the real wallet's balanceUnsealedTransaction
+    // and serializes/deserializes transactions correctly.
+    walletProvider: {
+      getCoinPublicKey: () => coinPublicKey,
+      getEncryptionPublicKey: () => encPublicKey,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      balanceTx: async (tx: any): Promise<any> => {
+        const serializedTx = toHex(tx.serialize());
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (target as any)[prop];
+        const received = await (wallet as any).balanceUnsealedTransaction(serializedTx);
+        return Transaction.deserialize('signature', 'proof', 'binding', fromHex(received.tx));
+      },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any,
+
+    // MidnightProvider adapter: submits the finalized transaction via the real wallet
+    midnightProvider: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      submitTx: async (tx: any): Promise<string> => {
+        const serializedTx = toHex(tx.serialize());
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (wallet as any).submitTransaction(serializedTx);
+        const txIdentifiers = tx.identifiers();
+        return txIdentifiers[0];
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    }) as any,
-    // Cast the real wallet api to serve as the midnightProvider as well
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    midnightProvider: wallet as any,
+    } as any,
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
