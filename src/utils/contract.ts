@@ -7,7 +7,7 @@ import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-pri
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-config-provider';
-import { CompiledThresholdContractContract, createThresholdPrivateState } from '../../preprod-deployment/contracts/src/index';
+import { CompiledThresholdContractContract, createThresholdPrivateState, Contract as RawContract } from '../../preprod-deployment/contracts/src/index';
 import type { InitialAPI, ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { toHex, fromHex } from '@midnight-ntwrk/midnight-js-utils';
@@ -310,7 +310,7 @@ export async function issueAttestation(
     attestationSalt: () => [undefined, new Uint8Array(32)]
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const contractInst = new CompiledThresholdContractContract(dummyWitnesses as any);
+  const contractInst = new RawContract(dummyWitnesses as any);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const applicantAddr = (contractInst as any)._derivePublicKey_0(walletSecretKey);
 
