@@ -7,7 +7,7 @@ import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-pri
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-config-provider';
-import { CompiledThresholdContractContract } from '../../preprod-deployment/contracts/src/index';
+import { CompiledThresholdContractContract, createThresholdPrivateState } from '../../preprod-deployment/contracts/src/index';
 import type { InitialAPI, ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { toHex, fromHex } from '@midnight-ntwrk/midnight-js-utils';
@@ -15,6 +15,9 @@ import { Transaction } from '@midnight-ntwrk/midnight-js-protocol/ledger';
 
 // Initialize network ID globally
 setNetworkId('preprod');
+
+// localStorage key for persisting the registered issuer
+const ISSUER_STORAGE_KEY = 'threshold_issuer';
 
 export type IssuerSummary = {
   issuerId: string;
@@ -43,6 +46,22 @@ export type ProofResult = {
 export function truncateHash(hash: string): string {
   if (!hash || hash.length <= 12) return hash;
   return `${hash.slice(0, 6)}…${hash.slice(-4)}`;
+}
+
+/** Persist registered issuer to localStorage so it survives page reloads */
+export function saveIssuer(issuer: IssuerSummary): void {
+  localStorage.setItem(ISSUER_STORAGE_KEY, JSON.stringify(issuer));
+}
+
+/** Load persisted issuer from localStorage */
+export function loadSavedIssuer(): IssuerSummary | null {
+  try {
+    const raw = localStorage.getItem(ISSUER_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as IssuerSummary;
+  } catch {
+    return null;
+  }
 }
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS ?? "";
@@ -102,12 +121,13 @@ async function getConnectedAPI(): Promise<ConnectedAPI> {
   return (typeof connector.connect === 'function' ? await connector.connect('preprod') : await (connector as any).enable()) as ConnectedAPI;
 }
 
-async function getContract() {
-  if (networkContract) return networkContract;
+// Module-level private state store so we can update witnesses before each call
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let privateStateProviderInstance: any = null;
 
+async function getContract(privateState?: { income?: number; salt?: Uint8Array }) {
   const wallet = await getConnectedAPI();
-  
-   
+
   let coinPublicKey = "";
   let encPublicKey = "";
 
@@ -123,26 +143,45 @@ async function getContract() {
     throw new Error("Failed to retrieve real shielded keys from the connected wallet. Ensure your wallet is fully synced.");
   }
 
+  // Build a random secret key from the wallet's coin public key bytes (deterministic per session)
+  const secretKey = new Uint8Array(32);
+  const coinKeyHex = coinPublicKey.replace(/[^0-9a-f]/gi, '').slice(0, 64);
+  for (let i = 0; i < Math.min(coinKeyHex.length / 2, 32); i++) {
+    secretKey[i] = parseInt(coinKeyHex.substring(i * 2, i * 2 + 2), 16);
+  }
+
+  const salt = privateState?.salt ?? new Uint8Array(32);
+  const income = BigInt(privateState?.income ?? 0);
+
+  // Create the private state with the witnesses the contract needs
+  const initialPrivateState = createThresholdPrivateState(secretKey, income, salt);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const accountId = (typeof (wallet as any).getUnshieldedAddress === 'function'
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ? (await (wallet as any).getUnshieldedAddress()).unshieldedAddress
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    : (await (wallet as any).state?.())?.address) ?? 'default';
+
+  privateStateProviderInstance = levelPrivateStateProvider({
+    privateStateStoreName: 'threshold-private-state',
+    privateStoragePasswordProvider: async () => "threshold-demo-password",
+    signingKeyStoreName: 'threshold-signing-keys',
+    accountId,
+  });
+
   const zkConfigProvider = new FetchZkConfigProvider(window.location.origin + '/managed/threshold', fetch.bind(window));
 
   const providers = {
-    privateStateProvider: levelPrivateStateProvider({
-      privateStateStoreName: 'threshold-private-state',
-      privateStoragePasswordProvider: async () => "threshold-demo-password",
-      signingKeyStoreName: 'threshold-signing-keys',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      accountId: (typeof (wallet as any).getUnshieldedAddress === 'function' ? (await (wallet as any).getUnshieldedAddress()).unshieldedAddress : (await (wallet as any).state?.())?.address) ?? 'default',
-    }),
+    privateStateProvider: privateStateProviderInstance,
     publicDataProvider: indexerPublicDataProvider(
       'https://indexer.preprod.midnight.network/api/v4/graphql',
       'wss://indexer.preprod.midnight.network/api/v4/graphql/ws'
     ),
     zkConfigProvider,
     proofProvider: httpClientProofProvider('https://midnight-proof-server.onrender.com', zkConfigProvider),
-    
+
     // WalletProvider adapter: bridges the DApp connector API to the WalletProvider interface
-    // required by midnight-js-contracts. Uses the real wallet's balanceUnsealedTransaction
-    // and serializes/deserializes transactions correctly.
     walletProvider: {
       getCoinPublicKey: () => coinPublicKey,
       getEncryptionPublicKey: () => encPublicKey,
@@ -172,13 +211,14 @@ async function getContract() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { createCircuitCallTxInterface } = await import('@midnight-ntwrk/midnight-js-contracts' as any);
-  
+
+  // Always create a fresh contract instance so witnesses are always up to date
   networkContract = {
     callTx: createCircuitCallTxInterface(
       providers,
       CompiledThresholdContractContract,
       CONTRACT_ADDRESS,
-      undefined // no private state persistence needed for these public interactions
+      initialPrivateState
     )
   };
 
@@ -187,40 +227,30 @@ async function getContract() {
 
 export async function registerIssuer(name: string): Promise<IssuerSummary> {
   const contract = await getContract();
-  // Derive a deterministic issuer ID from the connected wallet's shielded coin public key
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const walletApi = (window as any).midnight;
-   
+
+  // Get wallet coin public key to use as the issuer's on-chain ID
+  const wallet = await getConnectedAPI();
   let issuerId = "";
-  if (walletApi) {
-    // Try to get the shielded coin public key from the connected wallet
-    const knownKeys = ['mnLace', 'nightscape', 'lace'];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (typeof (wallet as any).getShieldedAddresses === 'function') {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let connector: any = null;
-    for (const key of knownKeys) {
-      if (walletApi[key] && typeof walletApi[key].connect === 'function') { connector = walletApi[key]; break; }
-    }
-    if (!connector && typeof walletApi.connect === 'function') connector = walletApi;
-    if (connector) {
-      const api = await connector.connect('preprod');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (typeof (api as any).getShieldedAddresses === 'function') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const shielded = await (api as any).getShieldedAddresses();
-        issuerId = shielded.shieldedCoinPublicKey || "";
-      }
-    }
+    const shielded = await (wallet as any).getShieldedAddresses();
+    issuerId = shielded.shieldedCoinPublicKey || "";
   }
-  // Fall back to a timestamp-based ID if keys are unavailable
   if (!issuerId) issuerId = `issuer-${Date.now()}`;
 
   await contract.callTx.registerIssuer(new Uint8Array(32));
-  return { issuerId, name };
+
+  const issuer: IssuerSummary = { issuerId, name };
+  // Persist so user doesn't need to re-register on every page load
+  saveIssuer(issuer);
+  return issuer;
 }
 
 export function listIssuers(): IssuerSummary[] {
-  // Read from indexer in real app, mocked here for fast UI reload
-  return [];
+  // Return persisted issuer if available
+  const saved = loadSavedIssuer();
+  return saved ? [saved] : [];
 }
 
 export async function createListing(
@@ -228,11 +258,9 @@ export async function createListing(
   landlordTag: string
 ): Promise<ListingSummary> {
   const contract = await getContract();
-  // We need to encode the landlord tag correctly according to what the contract expects.
-  // Assuming a generic Uint8Array for now as per the original snippet.
-  const listingId = await contract.callTx.createListing(BigInt(rentAmount));
+  const result = await contract.callTx.createListing(BigInt(rentAmount));
   return {
-    listingId: Number(listingId?.public ?? 1),
+    listingId: Number(result?.public ?? 1),
     rentAmount,
     landlordTag,
     verifiedCount: 0,
@@ -248,20 +276,25 @@ export async function issueAttestation(
   _applicantAddress: string,
   income: number
 ): Promise<AttestationHandle> {
-  const contract = await getContract();
-  // Generate a random attestation ID and derive issuer/applicant as 32-byte arrays
-  const attestationId = new Uint8Array(32);
-  crypto.getRandomValues(attestationId);
-  const issuerId = new Uint8Array(32);     // issuer identity (the registered issuer)
-  const applicantAddr = new Uint8Array(32); // applicant address (off-chain hand-off)
-  await contract.callTx.issueAttestation(attestationId, issuerId, applicantAddr);
-  // Encode the attestation ID as hex for the applicant to reference
-  const attestationHex = Array.from(attestationId).map(b => b.toString(16).padStart(2,'0')).join('');
   // Generate a random salt for the income commitment
   const saltBytes = new Uint8Array(32);
   crypto.getRandomValues(saltBytes);
-  const salt = Array.from(saltBytes).map(b => b.toString(16).padStart(2,'0')).join('');
-  return { attestationId: attestationHex, income, salt };
+
+  // Get a fresh contract instance with the income and salt set as private witnesses
+  const contract = await getContract({ income, salt: saltBytes });
+
+  // Generate a random attestation ID
+  const attestationId = new Uint8Array(32);
+  crypto.getRandomValues(attestationId);
+
+  const issuerId = new Uint8Array(32);     // issuer identity bytes
+  const applicantAddr = new Uint8Array(32); // applicant address bytes
+
+  await contract.callTx.issueAttestation(attestationId, issuerId, applicantAddr);
+
+  const attestationHex = Array.from(attestationId).map(b => b.toString(16).padStart(2, '0')).join('');
+  const saltHex = Array.from(saltBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  return { attestationId: attestationHex, income, salt: saltHex };
 }
 
 export async function submitProof(input: {
@@ -272,13 +305,23 @@ export async function submitProof(input: {
   applicantAddress: string;
   multiplier: number;
 }): Promise<ProofResult> {
-  const contract = await getContract();
+  // Decode the salt hex back to Uint8Array
+  const saltBytes = new Uint8Array(32);
+  const saltHex = input.salt.replace(/[^0-9a-f]/gi, '').slice(0, 64);
+  for (let i = 0; i < Math.min(saltHex.length / 2, 32); i++) {
+    saltBytes[i] = parseInt(saltHex.substring(i * 2, i * 2 + 2), 16);
+  }
+
+  // Get a fresh contract instance with the applicant's income and salt as witnesses
+  const contract = await getContract({ income: input.income, salt: saltBytes });
+
   // Decode attestationId hex back to Uint8Array
   const attestBytes = new Uint8Array(32);
   const hexChars = input.attestationId.replace(/[^0-9a-f]/gi, '').slice(0, 64);
   for (let i = 0; i < Math.min(hexChars.length / 2, 32); i++) {
     attestBytes[i] = parseInt(hexChars.substring(i * 2, i * 2 + 2), 16);
   }
+
   await contract.callTx.submitProof(
     BigInt(input.listingId),
     attestBytes,

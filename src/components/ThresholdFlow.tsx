@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type {
   IssuerSummary,
   ListingSummary,
   AttestationHandle,
 } from "../utils/contract";
-import { truncateHash } from "../utils/contract";
+import { truncateHash, loadSavedIssuer } from "../utils/contract";
 
 type Props = {
   connected: boolean;
@@ -67,6 +67,15 @@ export default function ThresholdFlow({
   const [attestIncome, setAttestIncome] = useState("7500");
   const [lastAttestation, setLastAttestation] =
     useState<AttestationHandle | null>(null);
+
+  // Restore previously registered issuer from localStorage on mount
+  useEffect(() => {
+    const saved = loadSavedIssuer();
+    if (saved) {
+      setSelectedIssuerId(saved.issuerId);
+      setIssuerNotice(`"${saved.name}" restored — ready to seal attestations.`);
+    }
+  }, []);
 
   async function handleRegisterIssuer(e: React.FormEvent) {
     e.preventDefault();
