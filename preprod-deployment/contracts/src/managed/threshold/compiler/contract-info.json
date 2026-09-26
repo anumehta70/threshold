@@ -1,0 +1,251 @@
+{
+  "compiler-version": "0.31.1",
+  "language-version": "0.23.0",
+  "runtime-version": "0.16.0",
+  "circuits": [
+    {
+      "name": "registerIssuer",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "issuerId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "createListing",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "rentAmount",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Uint",
+        "maxval": 18446744073709551615
+      }
+    },
+    {
+      "name": "issueAttestation",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "attestationId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "issuerId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "applicantAddress",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "submitProof",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "listingId",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        },
+        {
+          "name": "attestationId",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "multiplier",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    }
+  ],
+  "witnesses": [
+    {
+      "name": "callerSecretKey",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "attestationIncome",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Uint",
+        "maxval": 18446744073709551615
+      }
+    },
+    {
+      "name": "attestationSalt",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    }
+  ],
+  "contracts": [
+  ],
+  "ledger": [
+    {
+      "name": "issuerCount",
+      "index": 0,
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "trustedIssuers",
+      "index": 1,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Bytes",
+        "length": 32
+      },
+      "value": {
+        "type-name": "Boolean"
+      }
+    },
+    {
+      "name": "listingCount",
+      "index": 2,
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "listingRentAmount",
+      "index": 3,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Uint",
+        "maxval": 18446744073709551615
+      },
+      "value": {
+        "type-name": "Uint",
+        "maxval": 18446744073709551615
+      }
+    },
+    {
+      "name": "listingLandlord",
+      "index": 4,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Uint",
+        "maxval": 18446744073709551615
+      },
+      "value": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "listingVerifiedCount",
+      "index": 5,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Uint",
+        "maxval": 18446744073709551615
+      },
+      "value": {
+        "type-name": "Uint",
+        "maxval": 4294967295
+      }
+    },
+    {
+      "name": "attestationCommitment",
+      "index": 6,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Bytes",
+        "length": 32
+      },
+      "value": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "attestationIssuer",
+      "index": 7,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Bytes",
+        "length": 32
+      },
+      "value": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "proofNullifiers",
+      "index": 8,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Bytes",
+        "length": 32
+      },
+      "value": {
+        "type-name": "Boolean"
+      }
+    }
+  ]
+}
