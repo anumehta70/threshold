@@ -43,16 +43,35 @@ export function useMidnight() {
         throw new Error("No Midnight wallet found on window object! Please install the 1am/Nightscape extension.");
       }
       
-      let lace = null;
-      for (const key in midnightObj) {
-        if (midnightObj[key] && typeof midnightObj[key].enable === 'function') {
-          lace = midnightObj[key];
-          break;
+      let lace: any = null;
+
+      // 1. Maybe window.midnight itself is the provider
+      if (typeof midnightObj.enable === 'function') {
+        lace = midnightObj;
+      } else {
+        // 2. Check known non-enumerable keys explicitly
+        const knownKeys = ['mnLace', 'nightscape', 'lace'];
+        for (const key of knownKeys) {
+          if (midnightObj[key] && typeof midnightObj[key].enable === 'function') {
+            lace = midnightObj[key];
+            break;
+          }
+        }
+
+        // 3. Check all other properties just in case
+        if (!lace) {
+          const allProps = Object.getOwnPropertyNames(midnightObj);
+          for (const key of allProps) {
+            if (midnightObj[key] && typeof midnightObj[key].enable === 'function') {
+              lace = midnightObj[key];
+              break;
+            }
+          }
         }
       }
 
       if (!lace) {
-        throw new Error("window.midnight exists but contains no valid wallet providers (no .enable function found).");
+        throw new Error("window.midnight exists but we could not find a wallet provider with an .enable() function.");
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { address: addr } = await (lace as any).enable() as { address: string };
