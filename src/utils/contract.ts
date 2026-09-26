@@ -212,6 +212,7 @@ async function getContract() {
   const { createCircuitCallTxInterface } = await import('@midnight-ntwrk/midnight-js-contracts' as any);
 
   // Initialize the private state store with the initial state
+  privateStateProviderInstance.setContractAddress(CONTRACT_ADDRESS);
   await privateStateProviderInstance.set(CONTRACT_ADDRESS, initialPrivateState);
 
   networkContract = {
@@ -286,6 +287,7 @@ export async function issueAttestation(
   // Update private state witnesses before calling the circuit
   if (privateStateProviderInstance && walletSecretKey) {
     const newState = createThresholdPrivateState(walletSecretKey, BigInt(income), saltBytes);
+    privateStateProviderInstance.setContractAddress(CONTRACT_ADDRESS);
     await privateStateProviderInstance.set(CONTRACT_ADDRESS, newState);
   }
 
@@ -323,6 +325,7 @@ export async function submitProof(input: {
   // Update private state witnesses before calling the circuit
   if (privateStateProviderInstance && walletSecretKey) {
     const newState = createThresholdPrivateState(walletSecretKey, BigInt(input.income), saltBytes);
+    privateStateProviderInstance.setContractAddress(CONTRACT_ADDRESS);
     await privateStateProviderInstance.set(CONTRACT_ADDRESS, newState);
   }
 
