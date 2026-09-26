@@ -302,7 +302,15 @@ export async function issueAttestation(
   crypto.getRandomValues(attestationId);
 
   const issuerId = new Uint8Array(32);     // issuer identity bytes
-  const applicantAddr = new Uint8Array(32); // applicant address bytes
+  
+  // Derive the exact public key the circuit will expect during submitProof
+  const dummyWitnesses = {
+    callerSecretKey: () => [undefined, new Uint8Array(32)],
+    attestationIncome: () => [undefined, 0n],
+    attestationSalt: () => [undefined, new Uint8Array(32)]
+  };
+  const contractInst = new CompiledThresholdContractContract(dummyWitnesses as any);
+  const applicantAddr = (contractInst as any)._derivePublicKey_0(walletSecretKey);
 
   await contract.callTx.issueAttestation(attestationId, issuerId, applicantAddr);
 
