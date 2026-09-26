@@ -1,0 +1,25 @@
+﻿name: Compile Contract
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile Contract
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+          export PATH="$HOME/.local/bin:$PATH"
+          compact update 0.31.1 || compact update 0.31.0
+          compact --version
+          cd preprod-deployment/contracts
+          rm -rf src/managed
+          compact compile src/threshold.compact ./src/managed/threshold
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add preprod-deployment/contracts/src/managed
+          git commit -m "Add compiled contract artifacts"
+          git push
