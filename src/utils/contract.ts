@@ -261,8 +261,14 @@ export async function createListing(
 ): Promise<ListingSummary> {
   const contract = await getContract();
   const result = await contract.callTx.createListing(BigInt(rentAmount));
+  
+  // Extract the returned listing ID (either from result.public or fallback to 0 for demo)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let listingId = Number((result?.public as any)?.result ?? result?.public ?? 0);
+  if (isNaN(listingId)) listingId = 0;
+
   return {
-    listingId: Number(result?.public ?? 1),
+    listingId,
     rentAmount,
     landlordTag,
     verifiedCount: 0,
