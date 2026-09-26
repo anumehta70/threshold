@@ -124,14 +124,17 @@ async function getContract() {
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const Contract = (await import('@midnight-ntwrk/midnight-js-contracts' as any)).Contract;
+  const { createCircuitCallTxInterface } = await import('@midnight-ntwrk/midnight-js-contracts' as any);
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  networkContract = await (Contract as any).build(
-    providers,
-    CONTRACT_ADDRESS,
-    CompiledThresholdContractContract
-  );
+  networkContract = {
+    callTx: createCircuitCallTxInterface(
+      providers,
+      CompiledThresholdContractContract,
+      CONTRACT_ADDRESS,
+      undefined // no private state persistence needed for these public interactions
+    )
+  };
 
   return networkContract;
 }
