@@ -19,19 +19,34 @@ export const witnesses = {
   }: WitnessContext<Ledger, ThresholdPrivateState>): [
     ThresholdPrivateState,
     Uint8Array,
-  ] => [privateState, privateState.secretKey],
+  ] => [
+    privateState,
+    privateState.secretKey instanceof Uint8Array
+      ? privateState.secretKey
+      : new Uint8Array(Object.values(privateState.secretKey)),
+  ],
 
   attestationIncome: ({
     privateState,
   }: WitnessContext<Ledger, ThresholdPrivateState>): [
     ThresholdPrivateState,
     bigint,
-  ] => [privateState, privateState.attestationIncome],
+  ] => [
+    privateState,
+    typeof privateState.attestationIncome === 'bigint'
+      ? privateState.attestationIncome
+      : BigInt(privateState.attestationIncome as string | number),
+  ],
 
   attestationSalt: ({
     privateState,
   }: WitnessContext<Ledger, ThresholdPrivateState>): [
     ThresholdPrivateState,
     Uint8Array,
-  ] => [privateState, privateState.attestationSalt],
+  ] => [
+    privateState,
+    privateState.attestationSalt instanceof Uint8Array
+      ? privateState.attestationSalt
+      : new Uint8Array(Object.values(privateState.attestationSalt)),
+  ],
 };
