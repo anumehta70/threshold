@@ -47,13 +47,13 @@ export function useMidnight() {
       let lace: any = null;
 
       // 1. Maybe window.midnight itself is the provider
-      if (typeof midnightObj.enable === 'function') {
+      if (typeof midnightObj.connect === 'function' || typeof midnightObj.enable === 'function') {
         lace = midnightObj;
       } else {
         // 2. Check known non-enumerable keys explicitly
         const knownKeys = ['mnLace', 'nightscape', 'lace'];
         for (const key of knownKeys) {
-          if (midnightObj[key] && typeof midnightObj[key].enable === 'function') {
+          if (midnightObj[key] && (typeof midnightObj[key].connect === 'function' || typeof midnightObj[key].enable === 'function')) {
             lace = midnightObj[key];
             break;
           }
@@ -63,7 +63,7 @@ export function useMidnight() {
         if (!lace) {
           const allProps = Object.getOwnPropertyNames(midnightObj);
           for (const key of allProps) {
-            if (midnightObj[key] && typeof midnightObj[key].enable === 'function') {
+            if (midnightObj[key] && (typeof midnightObj[key].connect === 'function' || typeof midnightObj[key].enable === 'function')) {
               lace = midnightObj[key];
               break;
             }
@@ -72,10 +72,13 @@ export function useMidnight() {
       }
 
       if (!lace) {
-        throw new Error("window.midnight exists but we could not find a wallet provider with an .enable() function.");
+        throw new Error("window.midnight exists but we could not find a wallet provider with a .connect() or .enable() function.");
       }
+      
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { address: addr } = await (lace as any).enable() as { address: string };
+      const api = typeof lace.connect === 'function' ? await lace.connect('preprod') : await (lace as any).enable();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { address: addr } = api as { address: string };
       setAddress(addr);
       setStatus("connected");
     } catch (err) {

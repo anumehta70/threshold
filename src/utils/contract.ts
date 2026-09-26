@@ -65,13 +65,13 @@ async function getConnectedAPI(): Promise<ConnectedAPI> {
   let connector: any = null;
 
   // 1. Maybe window.midnight itself is the provider
-  if (typeof midnightObj.enable === 'function') {
+  if (typeof midnightObj.connect === 'function' || typeof midnightObj.enable === 'function') {
     connector = midnightObj;
   } else {
     // 2. Check known non-enumerable keys explicitly
     const knownKeys = ['mnLace', 'nightscape', 'lace'];
     for (const key of knownKeys) {
-      if (midnightObj[key] && typeof midnightObj[key].enable === 'function') {
+      if (midnightObj[key] && (typeof midnightObj[key].connect === 'function' || typeof midnightObj[key].enable === 'function')) {
         connector = midnightObj[key];
         break;
       }
@@ -81,7 +81,7 @@ async function getConnectedAPI(): Promise<ConnectedAPI> {
     if (!connector) {
       const allProps = Object.getOwnPropertyNames(midnightObj);
       for (const key of allProps) {
-        if (midnightObj[key] && typeof midnightObj[key].enable === 'function') {
+        if (midnightObj[key] && (typeof midnightObj[key].connect === 'function' || typeof midnightObj[key].enable === 'function')) {
           connector = midnightObj[key];
           break;
         }
@@ -90,10 +90,10 @@ async function getConnectedAPI(): Promise<ConnectedAPI> {
   }
 
   if (!connector) {
-    throw new Error("window.midnight exists but we could not find a wallet provider with an .enable() function.");
+    throw new Error("window.midnight exists but we could not find a wallet provider with a .connect() or .enable() function.");
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return await (connector as any).enable() as ConnectedAPI;
+  return (typeof connector.connect === 'function' ? await connector.connect('preprod') : await (connector as any).enable()) as ConnectedAPI;
 }
 
 async function getContract() {
