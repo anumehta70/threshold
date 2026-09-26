@@ -230,9 +230,9 @@ export async function createListing(
   const contract = await getContract();
   // We need to encode the landlord tag correctly according to what the contract expects.
   // Assuming a generic Uint8Array for now as per the original snippet.
-  await contract.callTx.createListing(BigInt(rentAmount), new Uint8Array(32));
+  const listingId = await contract.callTx.createListing(BigInt(rentAmount));
   return {
-    listingId: 1, // Will come from indexer/tx in fully built app
+    listingId: Number(listingId?.public ?? 1),
     rentAmount,
     landlordTag,
     verifiedCount: 0,
@@ -249,8 +249,19 @@ export async function issueAttestation(
   income: number
 ): Promise<AttestationHandle> {
   const contract = await getContract();
-  await contract.callTx.issueAttestation(new Uint8Array(32) /* applicant pubkey */);
-  return { attestationId: "attest-" + Date.now(), income, salt: "salt123" };
+  // Generate a random attestation ID and derive issuer/applicant as 32-byte arrays
+  const attestationId = new Uint8Array(32);
+  crypto.getRandomValues(attestationId);
+  const issuerId = new Uint8Array(32);     // issuer identity (the registered issuer)
+  const applicantAddr = new Uint8Array(32); // applicant address (off-chain hand-off)
+  await contract.callTx.issueAttestation(attestationId, issuerId, applicantAddr);
+  // Encode the attestation ID as hex for the applicant to reference
+  const attestationHex = Array.from(attestationId).map(b => b.toString(16).padStart(2,'0')).join('');
+  // Generate a random salt for the income commitment
+  const saltBytes = new Uint8Array(32);
+  crypto.getRandomValues(saltBytes);
+  const salt = Array.from(saltBytes).map(b => b.toString(16).padStart(2,'0')).join('');
+  return { attestationId: attestationHex, income, salt };
 }
 
 export async function submitProof(input: {
@@ -262,6 +273,16 @@ export async function submitProof(input: {
   multiplier: number;
 }): Promise<ProofResult> {
   const contract = await getContract();
-  await contract.callTx.submitProof(BigInt(input.listingId));
+  // Decode attestationId hex back to Uint8Array
+  const attestBytes = new Uint8Array(32);
+  const hexChars = input.attestationId.replace(/[^0-9a-f]/gi, '').slice(0, 64);
+  for (let i = 0; i < Math.min(hexChars.length / 2, 32); i++) {
+    attestBytes[i] = parseInt(hexChars.substring(i * 2, i * 2 + 2), 16);
+  }
+  await contract.callTx.submitProof(
+    BigInt(input.listingId),
+    attestBytes,
+    BigInt(input.multiplier)
+  );
   return { listingId: input.listingId, verified: true };
 }
