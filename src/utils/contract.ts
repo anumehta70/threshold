@@ -126,7 +126,6 @@ async function getContract() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { createCircuitCallTxInterface } = await import('@midnight-ntwrk/midnight-js-contracts' as any);
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   networkContract = {
     callTx: createCircuitCallTxInterface(
       providers,
