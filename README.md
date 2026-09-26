@@ -21,9 +21,11 @@
 |---------|---------|---------------|
 | Preprod | `c6b3da083a22731a1053fcded5cc81227e283758b95b955c57bcd89804625496` | [View on Midnight Explorer](https://preprod.midnightexplorer.com/contracts/0xc6b3da083a22731a1053fcded5cc81227e283758b95b955c57bcd89804625496) |
 
+![Contract On-Chain](screenshots/contract%20onchain.png)
+
 **Submitted Proof Transaction:** [View on 1AM Explorer](https://explorer.1am.xyz/tx/7589c71e78ac66bebb8f81bcf8c155613b58aebb57c65636972621f789e8d9b9?network=preprod)
 
-*(Add a screenshot of the block explorer showing the deployed contract details here)*
+![Success On-Chain](screenshots/sucess%20onchian.png)
 
 ## Project Description
 
@@ -56,6 +58,20 @@ a screening database, and landlords who can no longer trust a PDF. Our vision is
 - **Listing-Specific Nullifiers:** Prevent applicants from re-submitting proofs for the same listing, ensuring accurate verified counts.
 - **Fully On-Chain State:** No centralized databases holding sensitive applicant data.
 - **Local ZK Circuit Execution:** The applicant's exact income and identity remain as private witnesses on their local device, never broadcasted to the network.
+
+## App Screenshots
+
+**1. Clean and responsive UI**
+![Product UI](screenshots/product%20ui.png)
+
+**2. Employer generates attestation keys & salts**
+![Key and Salt](screenshots/key%20and%20salt.png)
+
+**3. ZK Proof generation & submission**
+![Prove and Submit](screenshots/prove%20and%20submit.png)
+
+**4. Comprehensive test coverage for all ZK circuits**
+![Test Output](screenshots/test%20output.png)
 
 ## Architecture Diagrams
 
@@ -191,8 +207,3 @@ and reading the public ledger.
 - **Multiple Attestation Providers:** Allowing multiple employers or payroll systems to attest to different income streams, which can be aggregated within the ZK circuit.
 - **Dynamic Threshold Adjustments:** Enabling landlords to adjust multiplier requirements dynamically without re-deploying listings.
 - **Integration with Identity Protocols:** Linking attestations to decentralized identity (DID) credentials to prove both "who I am" and "what I earn" in a single zero-knowledge transaction.
-
-## Project History
-
-Built for the Midnight Builder Challenge. See [`PROPOSAL.md`](PROPOSAL.md)
-for the original Level 3 idea submission this MVP implements.
