@@ -7,8 +7,7 @@ import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-pri
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-config-provider';
-// We import the compiled contract directly from the managed folder, avoiding workspace resolution issues
-import { CompiledThresholdContractContract } from '../../preprod-deployment/contracts/src/managed/threshold/contract/index';
+import { CompiledThresholdContractContract } from '../../preprod-deployment/contracts/src/index';
 import type { InitialAPI, ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 
 export type IssuerSummary = {
