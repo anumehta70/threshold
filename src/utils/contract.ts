@@ -101,6 +101,19 @@ async function getContract() {
 
   const wallet = await getConnectedAPI();
   
+   
+  let coinPublicKey = "0000000000000000000000000000000000000000000000000000000000000000";
+   
+  let encPublicKey = "0000000000000000000000000000000000000000000000000000000000000000";
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (typeof (wallet as any).getShieldedAddresses === 'function') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const shielded = await (wallet as any).getShieldedAddresses();
+    coinPublicKey = shielded.shieldedCoinPublicKey || coinPublicKey;
+    encPublicKey = shielded.shieldedEncryptionPublicKey || encPublicKey;
+  }
+
   const providers = {
     privateStateProvider: levelPrivateStateProvider({
       privateStateStoreName: 'threshold-private-state',
@@ -116,8 +129,22 @@ async function getContract() {
     zkConfigProvider: new FetchZkConfigProvider(window.location.origin + '/managed/threshold', fetch.bind(window)),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     proofProvider: httpClientProofProvider('https://midnight-proof-server.onrender.com', {} as any),
+    
+    // Create a proxy to provide synchronous getters for keys
+    // while forwarding all other wallet methods (balanceTx, submitTx) to the injected API
+    walletProvider: new Proxy(wallet, {
+      get(target, prop) {
+        if (prop === 'getCoinPublicKey') {
+          return () => coinPublicKey;
+        }
+        if (prop === 'getEncryptionPublicKey') {
+          return () => encPublicKey;
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (target as any)[prop];
+      }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    walletProvider: wallet as any,
+    }) as any,
     // We mock getMidnightProvider by just casting the wallet api since the library export is missing in this version
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     midnightProvider: wallet as any,
