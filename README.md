@@ -14,6 +14,8 @@
 |---------|---------|---------------|
 | Preprod | `c6b3da083a22731a1053fcded5cc81227e283758b95b955c57bcd89804625496` | [View on Midnight Explorer](https://preprod.midnightexplorer.com/contracts/0xc6b3da083a22731a1053fcded5cc81227e283758b95b955c57bcd89804625496) |
 
+**Submitted Proof Transaction:** [View on 1AM Explorer](https://explorer.1am.xyz/tx/7589c71e78ac66bebb8f81bcf8c155613b58aebb57c65636972621f789e8d9b9?network=preprod)
+
 ## What This Product Does
 
 Threshold is a confidential income-verification protocol built on Midnight.
