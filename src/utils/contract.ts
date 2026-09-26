@@ -211,12 +211,15 @@ async function getContract() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { createCircuitCallTxInterface } = await import('@midnight-ntwrk/midnight-js-contracts' as any);
 
+  // Initialize the private state store with the initial state
+  await privateStateProviderInstance.set(CONTRACT_ADDRESS, initialPrivateState);
+
   networkContract = {
     callTx: createCircuitCallTxInterface(
       providers,
       CompiledThresholdContractContract,
       CONTRACT_ADDRESS,
-      initialPrivateState
+      CONTRACT_ADDRESS
     )
   };
 
