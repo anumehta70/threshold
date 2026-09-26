@@ -16,6 +16,13 @@ export default defineConfig({
     }),
   ],
   server: { port: 5173 },
+  resolve: {
+    dedupe: [
+      "@midnight-ntwrk/compact-runtime",
+      "@midnight-ntwrk/midnight-js-contracts",
+      "@midnight-ntwrk/midnight-js-protocol"
+    ]
+  },
   build: { 
     outDir: "dist",
     target: "esnext"
