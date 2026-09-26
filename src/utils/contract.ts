@@ -309,7 +309,9 @@ export async function issueAttestation(
     attestationIncome: () => [undefined, 0n],
     attestationSalt: () => [undefined, new Uint8Array(32)]
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const contractInst = new CompiledThresholdContractContract(dummyWitnesses as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const applicantAddr = (contractInst as any)._derivePublicKey_0(walletSecretKey);
 
   await contract.callTx.issueAttestation(attestationId, issuerId, applicantAddr);
