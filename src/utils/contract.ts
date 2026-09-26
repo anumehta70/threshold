@@ -61,6 +61,7 @@ async function getConnectedAPI(): Promise<ConnectedAPI> {
     );
   }
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let connector: any = null;
 
   // 1. Maybe window.midnight itself is the provider
