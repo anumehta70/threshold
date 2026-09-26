@@ -152,7 +152,7 @@ async function getContract() {
   }
   walletSecretKey = secretKey;
 
-  // Initial dummy state to satisfy the constructor
+  // Initial state to satisfy the constructor
   const initialPrivateState = createThresholdPrivateState(secretKey, 0n, new Uint8Array(32));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -304,13 +304,13 @@ export async function issueAttestation(
   const issuerId = new Uint8Array(32);     // issuer identity bytes
   
   // Derive the exact public key the circuit will expect during submitProof
-  const dummyWitnesses = {
+  const initialWitnesses = {
     callerSecretKey: () => [undefined, new Uint8Array(32)],
     attestationIncome: () => [undefined, 0n],
     attestationSalt: () => [undefined, new Uint8Array(32)]
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const contractInst = new RawContract(dummyWitnesses as any);
+  const contractInst = new RawContract(initialWitnesses as any);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const applicantAddr = (contractInst as any)._derivePublicKey_0(walletSecretKey);
 

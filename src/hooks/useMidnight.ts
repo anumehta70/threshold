@@ -83,7 +83,7 @@ export function useMidnight() {
         const result = await api.getUnshieldedAddress();
         addr = result.unshieldedAddress;
       } else {
-        // Fallback for older/mock wallets
+        // Fallback for older wallets
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         addr = (api as any).address || (await (api as any).state?.())?.address || "Unknown Address";
       }
