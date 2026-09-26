@@ -1,5 +1,7 @@
 # Threshold
 
+**X Profile:** [@Thresholdvk](https://x.com/Thresholdvk) | **Launch Tweet:** [Read the announcement](https://x.com/Thresholdvk/status/2103977073698275560)
+
 ![CI](https://github.com/YOUR_GITHUB_USERNAME/threshold-proof-of-income/actions/workflows/ci.yml/badge.svg)
 
 > Prove your income clears the bar. Not what it is.
@@ -150,7 +152,7 @@ and reading the public ledger.
 
 ## Product X Profile
 
-[PLACEHOLDER — add your product's X/Twitter profile link here after creating the account]
+[@Thresholdvk](https://x.com/Thresholdvk)
 
 ## Project History
 
