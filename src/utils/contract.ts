@@ -102,16 +102,19 @@ async function getContract() {
   const wallet = await getConnectedAPI();
   
    
-  let coinPublicKey = "0000000000000000000000000000000000000000000000000000000000000000";
-   
-  let encPublicKey = "0000000000000000000000000000000000000000000000000000000000000000";
+  let coinPublicKey = "";
+  let encPublicKey = "";
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (typeof (wallet as any).getShieldedAddresses === 'function') {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const shielded = await (wallet as any).getShieldedAddresses();
-    coinPublicKey = shielded.shieldedCoinPublicKey || coinPublicKey;
-    encPublicKey = shielded.shieldedEncryptionPublicKey || encPublicKey;
+    coinPublicKey = shielded.shieldedCoinPublicKey;
+    encPublicKey = shielded.shieldedEncryptionPublicKey;
+  }
+
+  if (!coinPublicKey || !encPublicKey) {
+    throw new Error("Failed to retrieve real shielded keys from the connected wallet. Ensure your wallet is fully synced.");
   }
 
   const providers = {
@@ -130,8 +133,8 @@ async function getContract() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     proofProvider: httpClientProofProvider('https://midnight-proof-server.onrender.com', {} as any),
     
-    // Create a proxy to provide synchronous getters for keys
-    // while forwarding all other wallet methods (balanceTx, submitTx) to the injected API
+    // Create an adapter to bridge the WalletConnectedAPI to the expected WalletProvider interface
+    // forwarding all other wallet methods to the injected real wallet API
     walletProvider: new Proxy(wallet, {
       get(target, prop) {
         if (prop === 'getCoinPublicKey') {
@@ -145,7 +148,7 @@ async function getContract() {
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }) as any,
-    // We mock getMidnightProvider by just casting the wallet api since the library export is missing in this version
+    // Cast the real wallet api to serve as the midnightProvider as well
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     midnightProvider: wallet as any,
   };
