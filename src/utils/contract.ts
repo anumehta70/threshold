@@ -53,6 +53,7 @@ declare global {
 }
 
 async function getConnectedAPI(): Promise<ConnectedAPI> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const midnightObj = (window as any).midnight;
   if (!midnightObj) {
     throw new Error(

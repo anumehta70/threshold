@@ -37,6 +37,7 @@ export function useMidnight() {
     setStatus("connecting");
     setError(null);
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const midnightObj = (window as any).midnight;
       if (!midnightObj) {
         throw new Error("No Midnight wallet found on window object! Please install the 1am/Nightscape extension.");
