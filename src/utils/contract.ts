@@ -164,7 +164,7 @@ async function getContract() {
 
   privateStateProviderInstance = levelPrivateStateProvider({
     privateStateStoreName: 'threshold-private-state',
-    privateStoragePasswordProvider: async () => "threshold-demo-password",
+    privateStoragePasswordProvider: async () => "Threshold-Demo-Password-123!",
     signingKeyStoreName: 'threshold-signing-keys',
     accountId,
   });
