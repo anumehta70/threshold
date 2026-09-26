@@ -70,6 +70,9 @@ export const RUNTIME_MODE: "local" | "network" = CONTRACT_ADDRESS ? "network" : 
 // Network state globals
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let networkContract: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let privateStateProviderInstance: any = null;
+let walletSecretKey: Uint8Array | null = null;
 
 declare global {
   interface Window {
@@ -121,11 +124,9 @@ async function getConnectedAPI(): Promise<ConnectedAPI> {
   return (typeof connector.connect === 'function' ? await connector.connect('preprod') : await (connector as any).enable()) as ConnectedAPI;
 }
 
-// Module-level private state store so we can update witnesses before each call
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let privateStateProviderInstance: any = null;
+async function getContract() {
+  if (networkContract) return networkContract;
 
-async function getContract(privateState?: { income?: number; salt?: Uint8Array }) {
   const wallet = await getConnectedAPI();
 
   let coinPublicKey = "";
@@ -149,12 +150,10 @@ async function getContract(privateState?: { income?: number; salt?: Uint8Array }
   for (let i = 0; i < Math.min(coinKeyHex.length / 2, 32); i++) {
     secretKey[i] = parseInt(coinKeyHex.substring(i * 2, i * 2 + 2), 16);
   }
+  walletSecretKey = secretKey;
 
-  const salt = privateState?.salt ?? new Uint8Array(32);
-  const income = BigInt(privateState?.income ?? 0);
-
-  // Create the private state with the witnesses the contract needs
-  const initialPrivateState = createThresholdPrivateState(secretKey, income, salt);
+  // Initial dummy state to satisfy the constructor
+  const initialPrivateState = createThresholdPrivateState(secretKey, 0n, new Uint8Array(32));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const accountId = (typeof (wallet as any).getUnshieldedAddress === 'function'
@@ -212,7 +211,6 @@ async function getContract(privateState?: { income?: number; salt?: Uint8Array }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { createCircuitCallTxInterface } = await import('@midnight-ntwrk/midnight-js-contracts' as any);
 
-  // Always create a fresh contract instance so witnesses are always up to date
   networkContract = {
     callTx: createCircuitCallTxInterface(
       providers,
@@ -276,12 +274,17 @@ export async function issueAttestation(
   _applicantAddress: string,
   income: number
 ): Promise<AttestationHandle> {
+  const contract = await getContract();
+
   // Generate a random salt for the income commitment
   const saltBytes = new Uint8Array(32);
   crypto.getRandomValues(saltBytes);
 
-  // Get a fresh contract instance with the income and salt set as private witnesses
-  const contract = await getContract({ income, salt: saltBytes });
+  // Update private state witnesses before calling the circuit
+  if (privateStateProviderInstance && walletSecretKey) {
+    const newState = createThresholdPrivateState(walletSecretKey, BigInt(income), saltBytes);
+    await privateStateProviderInstance.set(CONTRACT_ADDRESS, newState);
+  }
 
   // Generate a random attestation ID
   const attestationId = new Uint8Array(32);
@@ -305,6 +308,8 @@ export async function submitProof(input: {
   applicantAddress: string;
   multiplier: number;
 }): Promise<ProofResult> {
+  const contract = await getContract();
+
   // Decode the salt hex back to Uint8Array
   const saltBytes = new Uint8Array(32);
   const saltHex = input.salt.replace(/[^0-9a-f]/gi, '').slice(0, 64);
@@ -312,8 +317,11 @@ export async function submitProof(input: {
     saltBytes[i] = parseInt(saltHex.substring(i * 2, i * 2 + 2), 16);
   }
 
-  // Get a fresh contract instance with the applicant's income and salt as witnesses
-  const contract = await getContract({ income: input.income, salt: saltBytes });
+  // Update private state witnesses before calling the circuit
+  if (privateStateProviderInstance && walletSecretKey) {
+    const newState = createThresholdPrivateState(walletSecretKey, BigInt(input.income), saltBytes);
+    await privateStateProviderInstance.set(CONTRACT_ADDRESS, newState);
+  }
 
   // Decode attestationId hex back to Uint8Array
   const attestBytes = new Uint8Array(32);
