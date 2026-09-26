@@ -53,12 +53,18 @@ declare global {
 }
 
 async function getConnectedAPI(): Promise<ConnectedAPI> {
-  const connector: InitialAPI | undefined =
-    window.midnight?.['nightscape'] ?? window.midnight?.['mnLace'];
-  if (!connector) {
+  const midnightObj = (window as any).midnight;
+  if (!midnightObj) {
     throw new Error(
-      "No Midnight wallet found! Please install the 1am/Nightscape extension."
+      "No Midnight wallet found on window object! Please install the 1am/Nightscape extension."
     );
+  }
+  
+  const providerKey = Object.keys(midnightObj)[0];
+  const connector = providerKey ? midnightObj[providerKey] : null;
+
+  if (!connector) {
+    throw new Error("window.midnight exists but contains no wallet providers.");
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return await (connector as any).enable() as ConnectedAPI;

@@ -37,9 +37,16 @@ export function useMidnight() {
     setStatus("connecting");
     setError(null);
     try {
-      const lace = window.midnight?.['mnLace'] ?? window.midnight?.['nightscape'];
+      const midnightObj = (window as any).midnight;
+      if (!midnightObj) {
+        throw new Error("No Midnight wallet found on window object! Please install the 1am/Nightscape extension.");
+      }
+      
+      const providerKey = Object.keys(midnightObj)[0];
+      const lace = providerKey ? midnightObj[providerKey] : null;
+
       if (!lace) {
-        throw new Error("No Midnight wallet found! Please install the 1am/Nightscape extension.");
+        throw new Error("window.midnight exists but contains no wallet providers.");
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { address: addr } = await (lace as any).enable() as { address: string };
