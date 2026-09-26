@@ -6,13 +6,13 @@
 
 ## Live Demo
 
-[PREPROD DEMO URL — paste after deploying the frontend, e.g. to Vercel/Netlify]
+[https://threshold-nu-one.vercel.app/](https://threshold-nu-one.vercel.app/)
 
 ## Contract Address
 
 | Network | Address |
 |---------|---------|
-| Preprod | `[CONTRACT ADDRESS — paste here after running the Preprod deploy, see "Deploy to Preprod" below]` |
+| Preprod | `75d96da09aa9414d760770592351106e8473e6cc1d65edf73c2e39d37ba657d5` |
 
 ## What This Product Does
 
