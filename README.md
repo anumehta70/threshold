@@ -8,6 +8,8 @@
 
 [https://threshold-nu-one.vercel.app/](https://threshold-nu-one.vercel.app/)
 
+**Demo Video:** [Watch on Google Drive](https://drive.google.com/file/d/1eZxJIZxfm-Ye7sFtpJYymsGvMIj8E5cD/view?usp=sharing)
+
 ## Contract Address
 
 | Network | Address | Explorer Link |
