@@ -39,12 +39,7 @@ export function useMidnight() {
     try {
       const lace = window.midnight?.['mnLace'] ?? window.midnight?.['nightscape'];
       if (!lace) {
-        // No Lace extension found — fall back to a stable demo identity so
-        // the flow stays fully clickable during review. Real funds/proofs
-        // are never touched in this path.
-        setAddress("demo1qpq…thold");
-        setStatus("connected");
-        return;
+        throw new Error("No Midnight wallet found! Please install the 1am/Nightscape extension.");
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { address: addr } = await (lace as any).enable() as { address: string };
