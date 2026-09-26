@@ -61,11 +61,16 @@ async function getConnectedAPI(): Promise<ConnectedAPI> {
     );
   }
   
-  const providerKey = Object.keys(midnightObj)[0];
-  const connector = providerKey ? midnightObj[providerKey] : null;
+  let connector = null;
+  for (const key in midnightObj) {
+    if (midnightObj[key] && typeof midnightObj[key].enable === 'function') {
+      connector = midnightObj[key];
+      break;
+    }
+  }
 
   if (!connector) {
-    throw new Error("window.midnight exists but contains no wallet providers.");
+    throw new Error("window.midnight exists but contains no valid wallet providers (no .enable function found).");
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return await (connector as any).enable() as ConnectedAPI;

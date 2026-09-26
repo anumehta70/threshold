@@ -43,11 +43,16 @@ export function useMidnight() {
         throw new Error("No Midnight wallet found on window object! Please install the 1am/Nightscape extension.");
       }
       
-      const providerKey = Object.keys(midnightObj)[0];
-      const lace = providerKey ? midnightObj[providerKey] : null;
+      let lace = null;
+      for (const key in midnightObj) {
+        if (midnightObj[key] && typeof midnightObj[key].enable === 'function') {
+          lace = midnightObj[key];
+          break;
+        }
+      }
 
       if (!lace) {
-        throw new Error("window.midnight exists but contains no wallet providers.");
+        throw new Error("window.midnight exists but contains no valid wallet providers (no .enable function found).");
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { address: addr } = await (lace as any).enable() as { address: string };
