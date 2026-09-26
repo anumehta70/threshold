@@ -10,9 +10,9 @@
 
 ## Contract Address
 
-| Network | Address |
-|---------|---------|
-| Preprod | `c6b3da083a22731a1053fcded5cc81227e283758b95b955c57bcd89804625496` |
+| Network | Address | Explorer Link |
+|---------|---------|---------------|
+| Preprod | `c6b3da083a22731a1053fcded5cc81227e283758b95b955c57bcd89804625496` | [View on Midnight Explorer](https://preprod.midnightexplorer.com/contracts/0xc6b3da083a22731a1053fcded5cc81227e283758b95b955c57bcd89804625496) |
 
 ## What This Product Does
 
