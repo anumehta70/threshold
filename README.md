@@ -1,18 +1,21 @@
 # Threshold
 
-**X Profile:** [@Thresholdvk](https://x.com/Thresholdvk) | **Launch Tweet:** [Read the announcement](https://x.com/Thresholdvk/status/2103977073698275560)
 
 ![CI](https://github.com/YOUR_GITHUB_USERNAME/threshold-proof-of-income/actions/workflows/ci.yml/badge.svg)
 
 > Prove your income clears the bar. Not what it is.
 
+## Social Media
+
+- **X Profile:** [@Thresholdvk](https://x.com/Thresholdvk)
+- **Launch Tweet:** [Read the announcement](https://x.com/Thresholdvk/status/2103977073698275560)
+
 ## Live Demo
 
-[https://threshold-nu-one.vercel.app/](https://threshold-nu-one.vercel.app/)
+- **Live DApp:** [https://threshold-nu-one.vercel.app/](https://threshold-nu-one.vercel.app/)
+- **Demo Video:** [Watch on Google Drive](https://drive.google.com/file/d/1eZxJIZxfm-Ye7sFtpJYymsGvMIj8E5cD/view?usp=sharing)
 
-**Demo Video:** [Watch on Google Drive](https://drive.google.com/file/d/1eZxJIZxfm-Ye7sFtpJYymsGvMIj8E5cD/view?usp=sharing)
-
-## Contract Address
+## Preprod Contract Details
 
 | Network | Address | Explorer Link |
 |---------|---------|---------------|
@@ -20,7 +23,9 @@
 
 **Submitted Proof Transaction:** [View on 1AM Explorer](https://explorer.1am.xyz/tx/7589c71e78ac66bebb8f81bcf8c155613b58aebb57c65636972621f789e8d9b9?network=preprod)
 
-## What This Product Does
+*(Add a screenshot of the block explorer showing the deployed contract details here)*
+
+## Project Description
 
 Threshold is a confidential income-verification protocol built on Midnight.
 Renters today prove they can afford an apartment by handing landlords pay
@@ -37,13 +42,37 @@ registered payroll provider or employer seals a commitment to an
 applicant's real income. The applicant later proves — via a Compact
 circuit — that this attested income clears a specific listing's
 affordability bar, without ever revealing the figure, their employer, or
-their transaction history. Because the attestation is a cryptographic
-commitment rather than a re-uploadable document, it can't be forged the
-way a pay stub can — solving the landlord's fraud problem and the renter's
-over-disclosure problem with the same proof.
+their transaction history.
+
+## Project Vision
 
 Built for renters who don't want their full financial history sitting in
-a screening database, and landlords who can no longer trust a PDF.
+a screening database, and landlords who can no longer trust a PDF. Our vision is to eliminate the need for sharing raw financial documents in standard consumer background checks, establishing a zero-knowledge standard where users only prove the boolean conditions required for a service, dramatically reducing identity theft and document fraud.
+
+## Key Features
+
+- **Zero-Knowledge Income Verification:** Prove your income meets a landlord's requirement without revealing the actual number.
+- **Cryptographic Attestations:** Employers issue unforgeable commitments on-chain, eliminating the risk of fake pay stubs.
+- **Listing-Specific Nullifiers:** Prevent applicants from re-submitting proofs for the same listing, ensuring accurate verified counts.
+- **Fully On-Chain State:** No centralized databases holding sensitive applicant data.
+- **Local ZK Circuit Execution:** The applicant's exact income and identity remain as private witnesses on their local device, never broadcasted to the network.
+
+## Architecture Diagrams
+
+```mermaid
+sequenceDiagram
+    participant Employer
+    participant Midnight Ledger
+    participant Applicant
+    participant Landlord
+
+    Employer->>Midnight Ledger: issueAttestation(Commitment to Income)
+    Landlord->>Midnight Ledger: createListing(Rent Amount)
+    Applicant->>Midnight Ledger: submitProof(ZK Proof: Income >= Rent * 3)
+    Note over Midnight Ledger: Verifies ZK Proof without seeing Income
+    Midnight Ledger->>Midnight Ledger: Increment Listing Verified Count
+    Landlord->>Midnight Ledger: Check Verified Count
+```
 
 ## Privacy Model
 
@@ -144,15 +173,24 @@ Every push to `main` and every pull request runs, via
 5. `npm run build`
 6. A best-effort Compact compile step (runs when `compactc` is available)
 
-## Usage Guide
+## User Onboarding Detail
 
-See [`docs/USAGE.md`](docs/USAGE.md) for a full walkthrough: registering an
+To use Threshold, users need:
+1. The Lace Wallet extension installed and set to the Midnight Preprod network.
+2. Testnet tDUST tokens (available from the faucet) to pay for transaction fees.
+3. Users acting as applicants receive a secure "Attestation ID" and "Salt" out-of-band from their employer, which they enter into the dApp to compute their local zero-knowledge proof.
+
+See [`docs/USAGE.md`](docs/USAGE.md) for a full step-by-step walkthrough: registering an
 issuer, sealing an attestation, publishing a listing, proving eligibility,
 and reading the public ledger.
 
-## Product X Profile
 
-[@Thresholdvk](https://x.com/Thresholdvk)
+
+## Future Scope
+
+- **Multiple Attestation Providers:** Allowing multiple employers or payroll systems to attest to different income streams, which can be aggregated within the ZK circuit.
+- **Dynamic Threshold Adjustments:** Enabling landlords to adjust multiplier requirements dynamically without re-deploying listings.
+- **Integration with Identity Protocols:** Linking attestations to decentralized identity (DID) credentials to prove both "who I am" and "what I earn" in a single zero-knowledge transaction.
 
 ## Project History
 
