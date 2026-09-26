@@ -77,7 +77,17 @@ export function useMidnight() {
       
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const api = typeof lace.connect === 'function' ? await lace.connect('preprod') : await (lace as any).enable();
-      const { address: addr } = api as { address: string };
+      
+      let addr = "";
+      if (typeof api.getUnshieldedAddress === 'function') {
+        const result = await api.getUnshieldedAddress();
+        addr = result.unshieldedAddress;
+      } else {
+        // Fallback for older/mock wallets
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        addr = (api as any).address || (await (api as any).state?.())?.address || "Unknown Address";
+      }
+
       setAddress(addr);
       setStatus("connected");
     } catch (err) {

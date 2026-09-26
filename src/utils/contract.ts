@@ -107,7 +107,7 @@ async function getContract() {
       privateStoragePasswordProvider: async () => "threshold-demo-password",
       signingKeyStoreName: 'threshold-signing-keys',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      accountId: (await (wallet as any).state?.())?.address ?? 'default',
+      accountId: (typeof (wallet as any).getUnshieldedAddress === 'function' ? (await (wallet as any).getUnshieldedAddress()).unshieldedAddress : (await (wallet as any).state?.())?.address) ?? 'default',
     }),
     publicDataProvider: indexerPublicDataProvider(
       'https://indexer.preprod.midnight.network/api/v4/graphql',
