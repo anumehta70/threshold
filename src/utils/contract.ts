@@ -121,6 +121,8 @@ async function getContract() {
     throw new Error("Failed to retrieve real shielded keys from the connected wallet. Ensure your wallet is fully synced.");
   }
 
+  const zkConfigProvider = new FetchZkConfigProvider(window.location.origin + '/managed/threshold', fetch.bind(window));
+
   const providers = {
     privateStateProvider: levelPrivateStateProvider({
       privateStateStoreName: 'threshold-private-state',
@@ -133,9 +135,8 @@ async function getContract() {
       'https://indexer.preprod.midnight.network/api/v4/graphql',
       'wss://indexer.preprod.midnight.network/api/v4/graphql/ws'
     ),
-    zkConfigProvider: new FetchZkConfigProvider(window.location.origin + '/managed/threshold', fetch.bind(window)),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    proofProvider: httpClientProofProvider('https://midnight-proof-server.onrender.com', {} as any),
+    zkConfigProvider,
+    proofProvider: httpClientProofProvider('https://midnight-proof-server.onrender.com', zkConfigProvider),
     
     // Create an adapter to bridge the WalletConnectedAPI to the expected WalletProvider interface
     // forwarding all other wallet methods to the injected real wallet API
