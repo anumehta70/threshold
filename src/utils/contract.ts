@@ -174,7 +174,7 @@ async function getContract() {
 
 export async function registerIssuer(name: string): Promise<IssuerSummary> {
   const contract = await getContract();
-  const tx = await contract.callTx.registerIssuer();
+  const tx = await contract.callTx.registerIssuer(new Uint8Array(32));
   return { issuerId: tx.public.issuerId?.toString() || "", name };
 }
 
