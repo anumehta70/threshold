@@ -1,7 +1,7 @@
 # Threshold
 
 
-![CI](https://github.com/YOUR_GITHUB_USERNAME/threshold-proof-of-income/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/anumehta70/threshold/actions/workflows/ci.yml/badge.svg)
 
 > Prove your income clears the bar. Not what it is.
 
@@ -135,8 +135,8 @@ sequenceDiagram
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/YOUR_GITHUB_USERNAME/threshold-proof-of-income.git
-cd threshold-proof-of-income
+git clone https://github.com/anumehta70/threshold.git
+cd threshold
 
 # 2. Install frontend dependencies
 npm install
