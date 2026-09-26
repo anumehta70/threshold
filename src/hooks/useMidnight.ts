@@ -77,7 +77,6 @@ export function useMidnight() {
       
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const api = typeof lace.connect === 'function' ? await lace.connect('preprod') : await (lace as any).enable();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { address: addr } = api as { address: string };
       setAddress(addr);
       setStatus("connected");
