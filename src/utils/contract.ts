@@ -9,6 +9,10 @@ import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-p
 import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-config-provider';
 import { CompiledThresholdContractContract } from '../../preprod-deployment/contracts/src/index';
 import type { InitialAPI, ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
+import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+
+// Initialize network ID globally
+setNetworkId('preprod');
 
 export type IssuerSummary = {
   issuerId: string;
